@@ -7,7 +7,7 @@ from PIL import Image
 # ----------------------------
 # Configure Streamlit App
 # ----------------------------
-st.set_page_config(page_title="PsyPredict", page_icon="📊🔍", layout="wide")
+st.set_page_config(page_title="AB-MindScan", page_icon="📊🔍", layout="wide")
 
 # Load trained model
 @st.cache_resource
@@ -23,9 +23,9 @@ with st.sidebar:
     st.title("🧠 Student Depression Predictor")
     st.markdown("Predict the likelihood of depression in students.")
     st.markdown("---")
-    st.markdown("👨‍💻 Developed by: **Brajesh Ahirwar**")
-    st.markdown("🔗 GitHub: [Brajesh Ahirwar](https://github.com/brajesh2306)")
-    st.markdown("🔗 LinkedIn: [Profile](www.linkedin.com/in/brajesh-ahirwar-6269b728b)")
+    st.markdown("👨‍💻 Developed by: **Abhinav Chaturvedi**")
+    st.markdown("🔗 GitHub: [https://github.com/abhinavchaturvedi585-tech)")
+    st.markdown("🔗 LinkedIn: [Profile](www.linkedin.com/in/abhinav-chaturvedi-b86a492a5)")
     st.markdown("---")
     st.markdown("✨ **Have fun exploring AI!**")
 
@@ -145,5 +145,6 @@ if st.button("Predict"):
 
         except Exception as e:
             st.error(f"Error during prediction: {e}")
+
 
 
