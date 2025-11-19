@@ -1,137 +1,219 @@
 import streamlit as st
+import numpy as np
 import pandas as pd
 import joblib
+from PIL import Image
+import base64
 
-# Set page config
-st.set_page_config(page_title="Student Depression Predictor", page_icon="🧠", layout="wide")
+# ----------------------------
+# App meta & page config
+# ----------------------------
+st.set_page_config(page_title="AB-MindScan — Improved UI", page_icon="🧠✨", layout="wide")
 
-# Custom CSS for UI enhancement
-st.markdown("""
+# ----------------------------
+# Styling (modern card-like look)
+# ----------------------------
+st.markdown(
+    """
     <style>
-    .main {
-        background-color: #f0f4ff;
-    }
-    .stButton>button {
-        background-color: #4CAF50;
-        color: white;
-        padding: 10px 24px;
-        border-radius: 8px;
-        border: none;
-        font-size: 16px;
-    }
-    .stButton>button:hover {
-        background-color: #45a049;
-    }
-    .title {
-        font-size: 34px;
-        font-weight: bold;
-        color: #2c3e50;
-        text-align: center;
-        margin-bottom: 20px;
-    }
-    .sub-title {
-        font-size: 18px;
-        text-align: center;
-        color: #34495e;
-        margin-bottom: 30px;
-    }
-    .card {
-        background: white;
-        padding: 20px;
-        border-radius: 12px;
-        box-shadow: 0px 4px 15px rgba(0,0,0,0.1);
-        margin-bottom: 25px;
-    }
+    .main {background-color: #f7fbf8}
+    .stApp > header {background: linear-gradient(90deg, #2E8B57, #2FAF7A);}
+    .card {background: white; border-radius: 14px; padding: 18px; box-shadow: 0 6px 18px rgba(46,139,87,0.08);} 
+    .muted {color: #6b7280;}
+    .big-num {font-size: 28px; font-weight:700}
+    .small {font-size:12px; color:#6b7280}
+    .hero-title {text-align:center; font-size:34px; font-weight:800; color:#0f5132}
+    .hero-sub {text-align:center; color:#4b5563}
+    .center {display:flex; justify-content:center}
     </style>
-""", unsafe_allow_html=True)
+    """,
+    unsafe_allow_html=True,
+)
 
-# Title and subtitle
-st.markdown("<h1 class='title'>🧠 Student Depression Prediction System</h1>", unsafe_allow_html=True)
-st.markdown("<p class='sub-title'>Enter the details below to predict the student's mental health risk.</p>", unsafe_allow_html=True)
+# ----------------------------
+# Helper: load model & image
+# ----------------------------
+@st.cache_resource
+def load_model(path="AdaBoost_model.pkl"):
+    try:
+        model = joblib.load(path)
+        return model
+    except Exception as e:
+        return None
 
-# Load model
-model_path = "AdaBoost_model.pkl"
-try:
-    model = joblib.load(model_path)
-except:
-    st.error("Model file not found! Please upload AdaBoost_model.pkl")
-    st.stop()
+@st.cache_resource
+def load_image(path):
+    try:
+        return Image.open(path)
+    except Exception:
+        return None
 
-# Input form
-with st.form("prediction_form"):
+model = load_model()
+hero_img = load_image("Artificial Intelligence Application in Mental Health Research copy.jpg")
+
+# ----------------------------
+# Sidebar (compact + useful)
+# ----------------------------
+with st.sidebar:
+    st.markdown("# 🧠 AB-MindScan")
+    st.markdown("Student Depression Predictor — friendly, lightweight, explainable UI")
+    st.markdown("---")
+    st.markdown("**Developer**: Abhinav Chaturvedi")
+    st.markdown("[GitHub](https://github.com/abhinavchaturvedi585-tech) • [LinkedIn](https://linkedin.com/in/abhinav-chaturvedi-b86a492a5)")
+    st.markdown("---")
+    st.markdown("**Model status**")
+    if model is None:
+        st.error("Model not found. Make sure `AdaBoost_model.pkl` is in the app folder.")
+    else:
+        st.success("Model loaded ✅")
+    st.markdown("---")
+    st.markdown("**Quick tips**")
+    st.write("• Fill all fields inside the form and click Predict.\n• Use realistic numeric ranges for best results.")
+    st.markdown("---")
+    st.caption("Built for educational/demo purposes. Not a clinical diagnosis tool.")
+
+# ----------------------------
+# Header / Hero
+# ----------------------------
+st.markdown("<div class='hero-title'>Student Depression Prediction</div>", unsafe_allow_html=True)
+st.markdown("<div class='hero-sub'>Enter student lifestyle & academic details — get a probability & simple recommendation</div>", unsafe_allow_html=True)
+if hero_img is not None:
+    st.image(hero_img, use_container_width=True)
+
+st.markdown("<br>", unsafe_allow_html=True)
+
+# ----------------------------
+# Input Form (use st.form so users can edit before submit)
+# ----------------------------
+with st.form(key="input_form"):
     st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.write("### Personal Details")
+    col1, col2, col3 = st.columns([1,1,1])
 
-    col1, col2 = st.columns(2)
     with col1:
-        student_id = st.number_input("Student ID", min_value=1, step=1)
-        age = st.slider("Age", 15, 60, 20)
-        city = st.text_input("City")
+        id_val = st.number_input("Student ID", min_value=0, step=1, help="Any numeric identifier")
+        gender = st.selectbox("Gender", ["Male", "Female", "Other"], index=0)
+        age = st.number_input("Age", min_value=10, max_value=100, step=1, value=20)
+        city = st.text_input("City", placeholder="e.g. Bhopal")
+        degree = st.text_input("Degree", placeholder="e.g. B.Tech - CS")
 
     with col2:
-        gender = st.selectbox("Gender", ["Male", "Female", "Other"])
-        profession = st.text_input("Profession", "Student")
-        degree = st.text_input("Degree", "B.Tech")
+        profession = st.text_input("Profession", placeholder="Student / Intern / Part-time job")
+        cgpa = st.number_input("CGPA (0-10)", min_value=0.0, max_value=10.0, step=0.01, format="%.2f")
+        study_hours = st.number_input("Work / Study Hours per day", min_value=0, max_value=24, step=1, value=5)
+        sleep_duration = st.selectbox("Average Sleep Duration", ["Less than 5 hours", "5-6 hours", "7-8 hours", "More than 8 hours"], index=2)
 
-    st.markdown("</div>", unsafe_allow_html=True)
-
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.write("### Academic & Lifestyle Details")
-
-    col3, col4 = st.columns(2)
     with col3:
-        academic_pressure = st.slider("Academic Pressure (1-5)", 1, 5, 3)
-        study_hours = st.slider("Study Hours per Week", 0, 100, 20)
-        cgpa = st.slider("CGPA", 0.0, 10.0, 7.5)
+        academic_pressure = st.slider("Academic Pressure", 1, 5, 3)
+        study_satisfaction = st.slider("Study Satisfaction", 1, 5, 3)
+        work_pressure = st.slider("Work Pressure", 0, 5, 0)
+        job_satisfaction = st.slider("Job Satisfaction", 0, 5, 0)
+        financial_stress = st.slider("Financial Stress", 1, 5, 3)
 
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    st.markdown("---")
+
+    col4, col5 = st.columns([1,1])
     with col4:
-        sleep_duration = st.selectbox("Sleep Duration", ["<5 hrs", "5-6 hrs", "7-8 hrs", "9+ hrs"])
-        dietary_habits = st.selectbox("Dietary Habits", ["Healthy", "Unhealthy"])
-        work_pressure = st.slider("Work Pressure (1-5)", 1, 5, 2)
+        dietary_habits = st.radio("Dietary Habits", ["Healthy", "Unhealthy"], index=0)
+        suicidal_thoughts = st.radio("Ever had suicidal thoughts?", ["No", "Yes"], index=0)
+        family_history = st.radio("Family history of mental illness?", ["No", "Yes"], index=0)
 
-    st.markdown("</div>", unsafe_allow_html=True)
+    with col5:
+        submit = st.form_submit_button("Predict — Analyze")
 
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.write("### Mental Health Indicators")
+# ----------------------------
+# Preprocess categorical values
+# ----------------------------
+def map_inputs():
+    g = 1 if gender == "Male" else (0 if gender == "Female" else 2)
+    diet = 1 if dietary_habits == "Healthy" else 0
+    suicidal = 1 if suicidal_thoughts == "Yes" else 0
+    fam = 1 if family_history == "Yes" else 0
+    sleep_map = {
+        'Less than 5 hours': 4,
+        '5-6 hours': 5.5,
+        '7-8 hours': 7.5,
+        'More than 8 hours': 9
+    }
+    sleep = sleep_map.get(sleep_duration, 7.5)
 
-    suicidal_thoughts = st.selectbox("Ever had suicidal thoughts?", ["No", "Yes"])
-    family_history = st.selectbox("Family History of Mental Illness", ["No", "Yes"])
-    financial_stress = st.slider("Financial Stress (1-5)", 1, 5, 3)
+    # Build dataframe using same column order expected by model
+    cols = ['id', 'Gender', 'Age', 'City', 'Profession', 'Academic Pressure',
+            'Work Pressure', 'CGPA', 'Study Satisfaction', 'Job Satisfaction',
+            'Sleep Duration', 'Dietary Habits', 'Degree', 'Have you ever had suicidal thoughts ?',
+            'Work/Study Hours', 'Financial Stress', 'Family History of Mental Illness']
 
-    st.markdown("</div>", unsafe_allow_html=True)
+    row = [id_val, g, age, city, profession, academic_pressure,
+           work_pressure, cgpa, study_satisfaction, job_satisfaction,
+           sleep, diet, degree, suicidal, study_hours, financial_stress, fam]
 
-    submit_btn = st.form_submit_button("Predict Depression Risk")
+    return pd.DataFrame([row], columns=cols)
 
-# On submit
-if submit_btn:
-    gender_map = {"Male": 1, "Female": 0, "Other": 2}
-    sleep_map = {"<5 hrs": 4, "5-6 hrs": 5.5, "7-8 hrs": 7.5, "9+ hrs": 9}
+# ----------------------------
+# Prediction and results
+# ----------------------------
+if submit:
+    input_df = map_inputs()
 
-    input_data = pd.DataFrame([[
-        student_id, gender_map[gender], age, city, profession, academic_pressure,
-        work_pressure, cgpa, study_hours, sleep_map[sleep_duration],
-        1 if dietary_habits == "Healthy" else 0,
-        degree, 1 if suicidal_thoughts == "Yes" else 0, financial_stress,
-        1 if family_history == "Yes" else 0
-    ]], columns=[
-        "id", "Gender", "Age", "City", "Profession", "Academic Pressure",
-        "Work Pressure", "CGPA", "Work/Study Hours", "Sleep Duration",
-        "Dietary Habits", "Degree", "Have Suicidal Thoughts",
-        "Financial Stress", "Family History"
-    ])
+    col_res1, col_res2 = st.columns([1,1])
 
-    prediction = model.predict_proba(input_data)[0][1] * 100
+    with col_res1:
+        st.markdown("### Result")
 
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.write("## 🎯 Prediction Result")
-    st.write(f"### 🔍 Depression Probability: **{prediction:.2f}%**")
+        if model is None:
+            st.error("Prediction unavailable — model failed to load. Check logs and restart the app.")
+        else:
+            try:
+                proba = model.predict_proba(input_df)[0][1]
+            except Exception as e:
+                st.error(f"Model inference error: {e}")
+                proba = None
 
-    if prediction < 30:
-        st.success("Low risk — Keep maintaining a healthy lifestyle! 😊")
-    elif prediction < 60:
-        st.warning("Moderate risk — Consider balancing academics and mental health. ⚠️")
-    else:
-        st.error("High risk — Professional support is strongly recommended. 🚨")
+            if proba is not None:
+                percent = proba * 100
+                # Show a nice metric
+                st.metric(label="Depression likelihood", value=f"{percent:.2f}%")
 
-    st.markdown("</div>", unsafe_allow_html=True)
+                # colour-coded suggestion
+                if proba < 0.2:
+                    st.success("Very unlikely to have depression — normal range.")
+                elif proba < 0.4:
+                    st.info("Unlikely — consider simple self-care and monitoring.")
+                elif proba < 0.6:
+                    st.warning("Some risk — suggest talking to a counselor or trusted person.")
+                elif proba < 0.8:
+                    st.warning("Likely — please consult a mental health professional soon.")
+                else:
+                    st.error("High likelihood — seek professional help immediately.")
+
+                # Visual progress bar to represent probability
+                progress_val = int(percent)
+                st.progress(min(max(progress_val, 0), 100))
+
+                # Quick explanation block
+                with st.expander("Why this prediction? (simple explanation)"):
+                    st.write("Model uses student profile features like sleep, academic pressure, CGPA and history to predict risk. This is a statistical model and not a diagnosis.")
+
+                # Provide option to download input + result
+                result_df = input_df.copy()
+                result_df['pred_probability'] = proba
+                csv = result_df.to_csv(index=False).encode('utf-8')
+                b64 = base64.b64encode(csv).decode()
+                href = f'<a href="data:file/csv;base64,{b64}" download="prediction_result.csv">Download input & result as CSV</a>'
+                st.markdown(href, unsafe_allow_html=True)
+
+    with col_res2:
+        st.markdown("### Input preview")
+        st.dataframe(map_inputs())
+
+        st.markdown("---")
+        st.markdown("**Notes & Limitations**")
+        st.write("• This demo is for educational use only.\n• Not a substitute for clinical assessment.\n• For troubling thoughts, contact emergency services or a mental health professional.")
+
+# ----------------------------
+# Footer
+# ----------------------------
+st.markdown("<hr>", unsafe_allow_html=True)
+st.markdown("Made with ❤️ by Abhinav — For demo & learning purposes.")
 
