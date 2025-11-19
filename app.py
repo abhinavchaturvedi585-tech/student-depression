@@ -7,7 +7,7 @@ from PIL import Image
 # ----------------------------
 # Configure Streamlit App
 # ----------------------------
-st.set_page_config(page_title="Student Depression Predictor", page_icon="🧠", layout="wide")
+st.set_page_config(page_title="Student Depressionssssss Predictor", page_icon="🧠", layout="wide")
 
 # Load trained model
 @st.cache_resource
@@ -145,3 +145,4 @@ if st.button("Predict"):
 
         except Exception as e:
             st.error(f"Error during prediction: {e}")
+
